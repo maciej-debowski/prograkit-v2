@@ -1,0 +1,25 @@
+; Write To Console (From Keyboard) single character (Command Kernel)
+; CX - Pointer to heap
+; BP - Size Of String
+WriteToConsole:
+    mov ebp, 1              ; X Offset
+    mov edi, 64             ; Y Offset
+    call ClearConsoleLine   ; Clearing the command line
+    ; mov eax, ls           ; Character to eax register
+    push eax                ; Character to write
+
+                            ; Checking wheter string is full
+    
+    cmp eax, 0              ; Checking if char is backspace
+    je UpdateCommandLine
+    ret_eq
+    
+    push cx              ; Pointer
+    ; db2dec                  ; Double bin to dec
+    ; call Debugger_Last  
+    hwls                    ; Heap Write From Last Stack
+    ; dbgh                  ; Debug Heap
+    inc bp                  ; Increment Size Of String
+    inc cx                  ; Increment Pointer
+    call UpdateCommandLine  ; Calling update command line
+ends

@@ -1,0 +1,19 @@
+; Kernel32
+
+ConsoleClear:
+
+    push 0x1000000
+
+    push 10000
+    push 10000
+    push 0
+    push 0
+
+    call draw
+
+    ; X
+    mov ebp, 1
+    ; Y
+    mov edi, 1
+    
+ends

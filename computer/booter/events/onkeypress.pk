@@ -1,0 +1,9 @@
+; This is function that is called when user presses enter
+; Eax contains the key ascii code in binary
+
+OnKeyPress:
+    ; push 100
+    ; push 500
+    ; push eax
+    call WriteToConsole
+ends

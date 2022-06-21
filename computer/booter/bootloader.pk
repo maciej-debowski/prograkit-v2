@@ -1,0 +1,51 @@
+; ========================================== ;
+; BootLoader written in PrograKit Assembly   ;
+; @author Maciej Dębowski                    ;
+; @version 1.0                               ;             
+; ========================================== ;
+
+; Constraints
+; .data :[NAME_MAX_16_CHARS]=[VALUE_MAX_16_CHARS],
+.data:SHORT=65536,                                          
+
+; Stack size
+.stack %SHORT%
+
+; Maximal heap size
+.heap_max %SHORT%
+
+; Including
+
+include /../sys32/consoleprintline.pk
+include /../sys32/consoleclear.pk
+include /../sys32/clearconsoleline.pk
+include /../sys32/consoleprintline_end.pk
+include /../sys32/updatecommandline.pk
+include /../sys32/nextline.pk
+include /../sys32/writetoconsole.pk
+
+; Events
+include /events/onkeypress.pk
+include /events/onbackspace.pk
+include /events/onesc.pk
+
+; Command Line Heap
+ha 128                                                  ; Heap Alloc
+                                     
+; RESERVED REGISTRES
+; DO NOT USE THEM
+
+mov cx, ls                                              ; Pointer
+mov bp, 0                                               ; Sizeof String 
+mov sp, 0                                               ; Pointer Start (Start Pointer)
+mov di, 0                                               ; Backspaces (Delete Index)
+mov ebp, 1                                              ; Console Index X
+mov edi, 1                                              ; Console Index Y
+
+; Welcome
+push word "Welcome to Faciosoft Floors v.2.0.0!"
+push $$
+call ConsolePrintLine
+call NextLine
+
+; Command line

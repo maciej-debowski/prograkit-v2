@@ -1,0 +1,16 @@
+; Clear 
+
+ClearConsoleLine:
+    ; edi - y
+
+    ; x y w h rgb in reversed order
+    push 0x1000000              ; RGB Black Color
+    push 16                     ; HEIGHT
+    push 10000                  ; WIDTH
+    mov bh, edi                 ; Line number
+    mul bh, 16                  ; Multiplying by 16 the lines number
+    push bh                     ; Y
+    push 0                      ; X
+    call draw                   ; Draw a black rectangle
+
+ends

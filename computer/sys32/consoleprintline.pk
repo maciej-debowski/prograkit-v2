@@ -1,0 +1,48 @@
+;
+; ebp - ConsoleX
+; edi - ConsoleY
+
+ConsolePrintLine:
+    ; Saving String Index
+    mov eax, ls
+    pop
+
+    ; Saving character
+    mov ebx, ls
+    
+    ; X, Y, Character
+    ; X
+    mov esp, ebp
+    mul esp, 16
+    push esp
+    mov esp, 0
+    ; Y
+    mov esp, edi
+    mul esp, 16
+    push esp
+    mov esp, 0
+    ; Char
+    push ebx
+    call Screen_Print_Char
+    pop 3
+
+    ; X + 1
+    inc ebp
+    pop
+
+    ; Pushing String Index
+    push eax
+
+    ; Decrementing String Index
+    dec ls
+
+    ; Loop for each char in the string
+    mov eax, ls
+    cmp eax, 0
+    jne ConsolePrintLine
+
+    push ebp
+    ; Still from cmp at 43
+    je ConsolePrintLine_End
+    
+ends

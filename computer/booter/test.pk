@@ -1,0 +1,13 @@
+; Adding command to heap (HeapWrite)
+push ax
+hw word "  wtf" 
+push $$
+mov dh, ls
+pop 1
+
+; Command written in console (HeapToStack)
+push ax
+push dh
+hts 
+push $$
+call ConsolePrintLine

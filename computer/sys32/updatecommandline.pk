@@ -1,0 +1,37 @@
+; Update Console
+
+; ax - pointer to heap position of terminal command
+
+UpdateCommandLine:
+    ; CX - Pointer
+    ; SP - Start of pointer
+    ; BP - Size of string
+
+    ; Set position of command line (In writetoconsole.pk)
+    ; mov ebp, 1                      ; X
+    ; mov edi, 16                     ; Y
+
+    ; Clearing console
+    call ClearConsoleLine
+
+    ; Heap to stack
+
+    ; Getting string from stack
+    push sp                         ; Start of heap
+    push bp                         ; Size of string
+    htsrvs                          ; Heap to stack reversed
+
+    ; Prefix before command
+    push word "$> "                 
+
+    mov ebp, 1                      ; X Offset to 0
+
+    ; Printing string to console
+    add bp, 3                       ; Skip first 3 bytes ($> )
+    push bp                         ; Size of string to write
+    ; call Debugger_Last
+    sub bp, 3                       ; Remove 3 bytes from size ($> )
+    call ConsolePrintLine           ; Write string to console
+
+    ; Clearing rectangle (..... [Backspaces]) Clearing the backspaces
+ends

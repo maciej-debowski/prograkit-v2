@@ -1,0 +1,6 @@
+ConsolePrintLine_End:
+    ; ls is length of current strign
+
+    pop
+    mov ebp, 1
+ends

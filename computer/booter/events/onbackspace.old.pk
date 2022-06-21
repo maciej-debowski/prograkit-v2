@@ -1,0 +1,13 @@
+; On backspace
+; CX - Pointer to heap (End )
+; BP - Size Of String
+; SP - Pointer to string (Start)
+
+; @SystemEvent
+
+OnBackspace:
+    sub cx, 1               ; Pointer to end
+    sub bp, 1               ; Size Of String
+    inc di                  ; Delete index (Backspace count)
+    call WriteToConsole     ; Writing to console
+ends

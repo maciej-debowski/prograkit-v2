@@ -1,0 +1,96 @@
+<!--cs--><script id="config">var ports = {"vm":3050}; window.ports = ports;</script><!--ce--><!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Virtual Machine</title>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                font-family: sans-serif;
+            }
+
+            body {
+                background: #000;
+                color: #fff;
+                height: 100vh;
+            }
+        </style>
+
+        <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+        <script id="setup">
+            var socket = io('http://localhost:' + ports.vm);
+        </script>
+    </head>
+    <body>
+        <canvas></canvas>
+
+        <script id="gpu">
+            /* GPU Script */
+
+            const canvas = document.querySelector("canvas")
+            const ctx = canvas.getContext("2d")
+
+            function resize() {
+                canvas.width = window.innerWidth
+                canvas.height = window.innerHeight
+            }
+
+            resize()
+            window.addEventListener("resize", resize)
+
+            function l(z, y) {
+                let o = z
+                for(let i = o.length; i < y; i++) {
+                    o = "0" + o
+                }
+                return o
+            }
+
+            socket.on('gpu:draw', ({ x, y, w, h, rgb }) => {
+                let clr = "#" + l((rgb - 0x1000000).toString(16), 6)
+                ctx.fillStyle = clr
+                ctx.fillRect(x, y, w, h)
+            })
+
+            socket.on('gpu:draw_pattern', ({ x, y, w, h, rgb, pattern }) => {
+                pattern.forEach((i, k) => {
+                    const real_x = x + (k % w)
+                    const real_y = y + Math.floor(k / w)
+                    ctx.fillStyle = i ? rgb : 'transparent'
+                    ctx.fillRect(real_x, real_y, 1, 1)
+                })
+            })
+        </script>
+
+        <script id="cpu">
+            socket.on('cpu:listen_for_event_kp', ({ uuid, ev }) => {
+                console.log(uuid + ev)
+                document.addEventListener(ev, (e) => {
+                    socket.emit(uuid + ev, e.key)
+                })
+            })
+            socket.on('cpu:listen_for_event_mm', ({ uuid, ev }) => {
+                document.addEventListener(ev, (e) => {
+                    socket.emit(uuid + ev, {x: e.clientX, y: e.clientY})
+                })
+            })
+            socket.on('cpu:listen_for_event', ({ uuid, ev }) => {
+                document.addEventListener(ev, (e) => {
+                    socket.emit(uuid + ev, true)
+                })
+            })
+        </script>
+
+        <script id="utils">
+            socket.on('utils:get_screen_resolution', () => {
+                socket.emit('utils:screen_resolution', [window.innerWidth, window.innerHeight])
+            })
+            
+            window.addEventListener("resize", () => socket.emit('utils:screen_resolution', [window.innerWidth, window.innerHeight]))
+        </script>
+    </body>
+</html>

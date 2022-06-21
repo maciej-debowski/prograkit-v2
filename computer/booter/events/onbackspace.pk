@@ -1,0 +1,18 @@
+; On backspace
+; CX - Pointer to heap (End )
+; BP - Size Of String
+; SP - Pointer to string (Start)
+
+; @SystemEvent
+
+OnBackspace:
+    ; FIXME replacing -1 with Space
+
+    ; Pop from string
+    push cx                                         ; Pushing pointer of heap back to stack              
+    hr                                              ; Heap remove
+    dec bp                                          ; Decrementing size of string           
+    dec cx                                          ; Decrementing pointer of heap (End)
+    inc di                                          ; Incrementing backspace index (Count of backspaces)
+    call WriteToConsole                             ; Writing to console
+ends

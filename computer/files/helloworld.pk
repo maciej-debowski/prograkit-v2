@@ -1,0 +1,24 @@
+; ========================================== ;
+; Hello world written in PrograKit Assembly  ;
+; @author Maciej Dębowski                    ;
+; @version 1.0                               ;             
+; ========================================== ;
+
+; Stack size
+.stack 1024
+
+; Maximal heap size
+.heap_max 1024
+
+; Liblaries
+
+include /../sys32/consoleprintline_end.pk
+include /../sys32/consoleprintline.pk
+
+; Pushing text to stack
+push word "Hello, world!"
+
+; Pushing lenght of string to stack | $$ should work as well instead of 13
+push 13
+
+call ConsolePrintLine
