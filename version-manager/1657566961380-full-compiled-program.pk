@@ -1,0 +1,629 @@
+; ========================================== ;
+; BootLoader written in PrograKit Assembly   ;
+; @author Maciej Dębowski                    ;
+; @version 1.0                               ;             
+; ========================================== ;
+
+; Constraints
+; .data :[NAME_MAX_16_CHARS]=[VALUE_MAX_16_CHARS],
+.data:SHORT=65536,   ; 64 kb
+.data:HEAP_SIZE=33554432, ; 32 mb                                         
+
+; Stack size
+.stack %SHORT%
+
+; Maximal heap size
+.heap_max %HEAP_SIZE%
+
+; Process Id
+.process_id 1
+
+; Including
+;
+; ebp - ConsoleX
+; edi - ConsoleY
+
+ConsolePrintLine:
+    ; Saving String Index
+    mov eax, ls
+    pop
+
+    ; Saving character
+    mov ebx, ls
+    
+    ; X, Y, Character
+    ; X
+    mov esp, ebp
+    mul esp, 16
+    push esp
+    mov esp, 0
+    ; Y
+    mov esp, edi
+    mul esp, 16
+    push esp
+    mov esp, 0
+    ; Char
+    push ebx
+    call Screen_Print_Char
+    pop 3
+
+    ; X + 1
+    inc ebp
+    pop
+
+    ; Pushing String Index
+    push eax
+
+    ; Decrementing String Index
+    dec ls
+
+    ; Loop for each char in the string
+    mov eax, ls
+    cmp eax, 0
+    jne ConsolePrintLine
+
+    push ebp
+    ; Still from cmp at 43
+    je ConsolePrintLine_End
+    
+ends
+; Kernel32
+
+ConsoleClear:
+
+    push 0x1000000
+
+    push 10000
+    push 10000
+    push 0
+    push 0
+
+    call draw
+
+    ; X
+    mov ebp, 1
+    ; Y
+    mov edi, 1
+    
+ends
+; Clear 
+
+ClearConsoleLine:
+    ; edi - y
+
+    ; x y w h rgb in reversed order
+    push 0x1000000              ; RGB Black Color
+    push 16                     ; HEIGHT
+    push 10000                  ; WIDTH
+    mov bh, edi                 ; Line number
+    mul bh, 16                  ; Multiplying by 16 the lines number
+    push bh                     ; Y
+    push 0                      ; X
+    call draw                   ; Draw a black rectangle
+
+ends
+ConsolePrintLine_End:
+    ; ls is length of current strign
+
+    pop
+    mov ebp, 1
+ends
+; Update Console
+
+; ax - pointer to heap position of terminal command
+
+UpdateCommandLine:
+    ; CX - Pointer
+    ; SP - Start of pointer
+    ; BP - Size of string
+
+    ; Set position of command line (In writetoconsole.pk)
+    ; mov ebp, 1                      ; X
+    ; mov edi, 16                     ; Y
+
+    ; Clearing console
+    call ClearConsoleLine
+
+    ; Heap to stack
+
+    ; Getting string from stack
+    dec sp                          ; Pointer--
+    push sp                         ; Start of heap
+    inc sp                          ; Pointer++
+    push bp                         ; Size of string
+    htsrvs                          ; Heap to stack reversed
+
+    ; Prefix before command
+    push word "$> "                 
+
+    mov ebp, 1                      ; X Offset to 0
+
+    ; Printing string to console
+    add bp, 3                       ; Skip first 3 bytes ($> )
+    push bp                         ; Size of string to write
+    ; call Debugger_Last
+    sub bp, 3                       ; Remove 3 bytes from size ($> )
+    call ConsolePrintLine           ; Write string to console
+
+    ; Clearing rectangle (..... [Backspaces]) Clearing the backspaces
+ends
+NextLine:
+    add edi, 1
+ends
+; Write To Console (From Keyboard) single character (Command Kernel)
+; CX - Pointer to heap
+; BP - Size Of String
+WriteToConsole:
+    mov ebp, 1              ; X Offset
+    mov edi, 64             ; Y Offset
+    call ClearConsoleLine   ; Clearing the command line
+    ; mov eax, ls           ; Character to eax register
+    push eax                ; Character to write
+
+                            ; Checking wheter string is full
+    
+    cmp eax, 0              ; Checking if char is backspace
+    je UpdateCommandLine
+    ret_eq
+    
+    push cx              ; Pointer
+    ; db2dec                  ; Double bin to dec
+    ; call Debugger_Last  
+    hwls                    ; Heap Write From Last Stack
+    ; dbgh                  ; Debug Heap
+    inc bp                  ; Increment Size Of String
+    inc cx                  ; Increment Pointer
+    call UpdateCommandLine  ; Calling update command line
+ends
+DrawMouseCursor:
+    push 0x10077dd
+    push 16
+    push 16
+    push moy
+    push mox
+    call draw
+    pop 5
+ends
+CheckLoop:
+    cmp isa, 1
+    jne Loop
+ends
+Loop:
+    pop
+    inc sfr             ; Incrementing system frame
+    mov isa, 1          ; System active = 1
+
+    mov ecx, 10000                  ; Test to ecx
+    push 0                          ; Test value to replace with screen height
+    call GetScreenHeight            ; Screen Height to last stack
+    mov ecx, ls                     ; Moving last stack to ebx
+    sub ecx, 16                     ; ECX -= 16
+
+    push 0x1009977      ; Color 
+    push ecx            ; Box Size (Height)
+    push 10000          ; Box Size (Width)
+    push 0              ; Pos Y
+    push 0              ; Pos X 
+    call draw           ; Draw
+    pop 5               ; Pop all stuff
+
+    mov eax, 10         ; Frames (1s to load)
+    cmp sfr, eax        ; Comparing frames to 
+    jle Loader_Screen   ; If less than then run Loader_Screen
+    ; ret_le              ; Return if less equal
+
+    ; Taskbar
+    call Taskbar_View   
+
+    ; Mouse Cursor
+    call DrawMouseCursor
+
+    ; Getting all files from current path 
+
+    ; Call in time (to avoid Maximum call stack size exceeded)
+    push 500            ; 500 miliseconds (~2 fps)
+    call_it Loop        ; Calling
+ends
+; Clearing stack to last zero
+
+ClearStacToZero:
+    pop
+    cmp ls, 0
+    jnz ClearStacToZero
+ends    
+SetPath:
+    ; Parameters
+    mov eax, ls         ; Length
+    pop             
+    mov ebx, ls         ; Pointer
+    pop             
+
+    ; Writing char to heap
+    push ebx            ; Pointer
+    hwls                ; Heap write last stack
+    pop 2               ; Popping char and pointer
+
+    ; Recursion
+    dec eax             ; Decrementing eax
+    inc ebx             ; Increment pointer
+    push ebx            ; Pointer
+    push eax            ; Length
+    cmp eax, 0          ; Compare if length != 0
+    jnz SetPath         ; Jump if not zero to SetPath
+ends
+GetPath:
+    mov eax, ptp            ; Pointer to path
+    push eax                ; Pointer
+    push ptl                ; Path Length
+    htsrvs                  ; Heap to stack reversed
+ends
+
+; Events
+; This is function that is called when user presses enter
+; Eax contains the key ascii code in binary
+
+OnKeyPress:
+    inc kpt
+    cmp eax, 102
+    je CheckLoop
+    
+    call WriteToConsole
+ends
+; On backspace
+; CX - Pointer to heap (End )
+; BP - Size Of String
+; SP - Pointer to string (Start)
+
+; @SystemEvent
+
+OnBackspace:
+    ; FIXME replacing -1 with Space
+
+    ; Pop from string
+    push cx                                         ; Pushing pointer of heap back to stack              
+    hr                                              ; Heap remove
+    dec bp                                          ; Decrementing size of string           
+    dec cx                                          ; Decrementing pointer of heap (End)
+    inc di                                          ; Incrementing backspace index (Count of backspaces)
+    call WriteToConsole                             ; Writing to console
+ends
+; On Escape
+
+; @SystemEvent
+OnEscape:
+    
+ends
+OnMouseMove:
+    call DrawMouseCursor
+ends
+
+; System vars
+; Consts
+.data:FALSE=0,
+.data:TRUE=1,
+.data:SECOND=1000,
+.data:MINUTE=60000,
+.data:HOUR=3600000,
+.data:HOUR_OFFSET=2,
+.data:MAX_PATH=128,
+
+; System variables
+cr_reg isa          ; Is System Active
+cr_reg kpt          ; Key Press Timer
+cr_reg sfr          ; System frames
+
+cr_reg mox          ; Mouse X
+cr_reg moy          ; Mouse Y
+
+cr_reg crh          ; Current hour
+cr_reg crm          ; Current minute
+cr_reg crs          ; Current second
+cr_reg crd          ; Current day
+cr_reg crmt         ; Current month
+cr_reg cry          ; Current year
+
+cr_reg dix          ; Desktop Index X
+cr_reg diy          ; Desktop Index Y
+
+; Path
+cr_reg pts          ; Path separator eg. f:/hd/jd has 2 (/)
+cr_reg ptl          ; Path length
+cr_reg ptp          ; Pointer to path heap (max 128 letters = 1kb heap)
+ha %MAX_PATH%       ; Heap allocate path
+mov ptp, ls         ; Mov pointer from ha to ptp
+
+; Default path
+push word "f:/new_prograkit/computer/files"
+push ptp
+push $
+
+mov ptl, ls
+call SetPath
+
+pop 2               ; Pop
+
+
+
+; Views
+Loader_Screen:
+    mov ebp, 50 ; x 
+    mov edi, 25 ; y
+
+    ; Full word didnt work :( 
+
+    push word "F"
+    push $
+    call ConsolePrintLine
+    mov ebp, 51 
+
+    push word "l"
+    push $
+    call ConsolePrintLine
+    mov ebp, 52 
+
+    push word "o"
+    push $
+    call ConsolePrintLine
+    mov ebp, 53 
+
+    push word "o"
+    push $
+    call ConsolePrintLine
+    mov ebp, 54 
+
+    push word "r"
+    push $
+    call ConsolePrintLine
+    mov ebp, 55 
+
+    push word "s"
+    push $
+    call ConsolePrintLine
+    mov ebp, 57 
+
+    push word "L"
+    push $
+    call ConsolePrintLine
+    mov ebp, 58 
+
+    push word "o"
+    push $
+    call ConsolePrintLine
+    mov ebp, 59 
+
+    push word "a"
+    push $
+    call ConsolePrintLine
+    mov ebp, 60 
+
+    push word "d"
+    push $
+    call ConsolePrintLine
+    mov ebp, 61 
+
+    push word "i"
+    push $
+    call ConsolePrintLine
+    mov ebp, 62 
+
+    push word "n"
+    push $
+    call ConsolePrintLine
+    mov ebp, 63 
+
+    push word "g"
+    push $
+    call ConsolePrintLine
+    mov ebp, 64 
+
+ends
+Taskbar_View:
+
+    ; =========================================== ;
+    ; Taskbar background                          ; 
+    ; =========================================== ;
+
+    push 0                          ; Test value to replace with screen height
+    call GetScreenHeight            ; Screen Height to last stack
+    mov ebx, ls                     ; Moving last stack to ebx
+    sub ebx, 100                    ; Substracting 100 from ebx
+    mov dl, ebx                     ; dl = ebx
+    pop                             ; Popping last stack
+
+    push 0x11F2020                  ; Color #1f2020
+    push 84                         ; Height
+    push 10000                      ; Width
+    push ebx                        ; Y
+    push 0                          ; X
+
+    call draw                       ; Drawing
+    pop 5
+
+    ; =========================================== ;
+    ; Start button + icon                         ; 
+    ; =========================================== ;
+
+    ; Frame
+
+    push 0x10099FF
+    push 60                         ; Height
+    push 60                         ; Width
+
+    add ebx, 12                     ; Adding 12 to ebx
+    push ebx                        ; Y
+    add ebx, 8                      ; Adding 8 to ebx
+
+    push 20                         ; X
+    call draw
+    pop 5
+
+    ; Icon
+
+    push 42                         ; X
+    add ebx, 22                     ; Adding +22 to ebx
+    sub ebx, 8                      ; - 8 from ebx
+    push ebx                        ; Y
+    add ebx, 8                      ; Adding 8 to ebx
+    push 102                        ; F letter
+
+    call Screen_Print_Char
+    pop 3
+    
+    ; =========================================== ;
+    ; Time                                        ; 
+    ; =========================================== ;
+
+    add dl, 34                      ; Offset to center y text in taskbar
+    
+    push 0                          ; Test value
+    call GetTimespan                ; Pushing timespan to test value
+    mov eax, ls                     ; Moving timespan to eax
+    pop                             ; Popping last stack
+
+    ; Hour
+    mov ebx, eax                    ; Moving timespan to ebx
+    div ebx, %HOUR%                 ; timespan / hour_in_ms (int no float)
+    mod ebx, 24                     ; hours_at_all % 24 = current hour
+    add ebx, %HOUR_OFFSET%          ; HOUR OFFSET
+    mov crh, ebx                    ; moving hour to current hour
+
+    push dl                         ; Taskbar Y
+    push 132                        ; X
+    cmp ebx, 9                      ; Cmp ebx, 9
+    jg Taskbar_WriteDataTwo         ; 2 digits
+    jle Taskbar_WriteDataSingle     ; 1 digit
+
+    ; Minute
+    mov ebx, eax                     ; Moving timespan to ebx         
+    div ebx, %MINUTE%                ; timespan / minute_in_ms (int no float)             
+    mod ebx, 60                      ; minutes_at_all % 60 = current minute     
+    mov crm, ebx                     ; moving minute to current minute       
+
+    push dl                          ; Taskbar Y       
+    push 180                         ; X           
+    cmp ebx, 9                       ; Cmp ebx, 9           
+    jg Taskbar_WriteDataTwo          ; 2 digits                       
+    jle Taskbar_WriteDataSingle      ; 1 digit                           
+
+    ; Second
+    mov ebx, eax                     ; Moving timespan to ebx                     
+    div ebx, %SECOND%                ; timespan / second_in_ms (int no float)         
+    mod ebx, 60                      ; seconds_at_all % 60 = current second  
+    mov crs, ebx                     ; moving second to current second           
+
+    push dl                          ; Taskbar Y   
+    push 228                         ; X       
+    cmp ebx, 9                       ; Cmp ebx, 9       
+    jg Taskbar_WriteDataTwo          ; 2 digits                   
+    jle Taskbar_WriteDataSingle      ; 1 digit    
+
+    sub dl, 40                       ; Substracting offset to center text in taskbar                   
+
+ends
+
+; Views utils
+Taskbar_WriteDataSingle:
+    mov bl, ls              ; X
+    pop
+    mov cl, ls              ; Y
+    pop
+
+    ; 0 pre 
+
+    push bl
+    push cl
+    push 48
+    call Screen_Print_Char
+
+    add bl, 16
+
+    ; digit
+
+    add ebx, 48             ; int to char
+    push bl                 ; x
+    push cl                 ; y 
+    push ebx                ; char
+    call Screen_Print_Char  ; print
+    
+    pop 6                   ; pop all
+ends
+Taskbar_WriteDataTwo:
+    mov bl, ls                  ; Y
+    pop
+    mov cl, ls                  ; X
+    pop
+
+    mov ecx, ebx                ; 2nd digit
+    mov edx, ebx                ; 1st digit
+
+    ; Hour range (10, 20)
+    mov ah, ebx                 ; ah = hour
+    div ah, 10                  ; divide ah by 10 (int division)
+    mul ah, 10                  ; multiply by 10
+
+    ; 1st digit
+    mov edx, ebx                ; edx = hour
+    div edx, 10                 ; (int) edx / 10 
+    add edx, 48                 ; int to char
+
+    ; 2nd digit
+    subf ecx, ah                ; We have it! (int)
+    add ecx, 48                 ; int to char
+
+    push bl                     ; x
+    push cl                     ; y
+    push edx                    ; char (1st digit)
+    call Screen_Print_Char      ; print
+
+    add bl, 16                  ; x + 16
+
+    push bl                     ; x
+    push cl                     ; y
+    push ecx                    ; char (2nd digit)
+    call Screen_Print_Char      ; print
+
+    pop 6                       ; pop all
+ends
+
+; Command Line Heap
+ha 128                                                  ; Heap Alloc
+                                     
+; RESERVED REGISTRES
+; DO NOT USE THEM
+
+mov cx, ls                                              ; Pointer
+mov bp, 0                                               ; Sizeof String 
+mov sp, cx                                              ; Pointer Start (Start Pointer)
+mov di, 0                                               ; Backspaces (Delete Index)
+mov ebp, 1                                              ; Console Index X
+mov edi, 1                                              ; Console Index Y
+
+; Welcome
+push word "Welcome to Faciosoft Floors v.2.0.0!"
+push $$
+call ConsolePrintLine
+call NextLine
+
+; Press Any key to continue
+push word "Press any F to continue..."
+push $$
+call ConsolePrintLine
+call NextLine
+
+; Printing path
+call NextLine
+push word "Current path:"
+push $$
+call ConsolePrintLine
+call NextLine
+
+; Getting path
+call GetPath
+push eax                                                  ; Eax has length of path
+call ConsolePrintLine
+
+; ========================================= ;
+; FacioSoft floors v.2.0.0. END OF FILE.    ;
+; (c) FacioSoft 2022-2022.                  ;
+; Written in Prograkit assembly             ;
+; ========================================= ;

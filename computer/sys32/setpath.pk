@@ -1,0 +1,20 @@
+SetPath:
+    ; Parameters
+    mov eax, ls         ; Length
+    pop             
+    mov ebx, ls         ; Pointer
+    pop             
+
+    ; Writing char to heap
+    push ebx            ; Pointer
+    hwls                ; Heap write last stack
+    pop 2               ; Popping char and pointer
+
+    ; Recursion
+    dec eax             ; Decrementing eax
+    inc ebx             ; Increment pointer
+    push ebx            ; Pointer
+    push eax            ; Length
+    cmp eax, 0          ; Compare if length != 0
+    jnz SetPath         ; Jump if not zero to SetPath
+ends

@@ -1,0 +1,36 @@
+Loop:
+    pop
+    inc sfr             ; Incrementing system frame
+    mov isa, 1          ; System active = 1
+
+    mov ecx, 10000                  ; Test to ecx
+    push 0                          ; Test value to replace with screen height
+    call GetScreenHeight            ; Screen Height to last stack
+    mov ecx, ls                     ; Moving last stack to ebx
+    sub ecx, 16                     ; ECX -= 16
+
+    push 0x1009977      ; Color 
+    push ecx            ; Box Size (Height)
+    push 10000          ; Box Size (Width)
+    push 0              ; Pos Y
+    push 0              ; Pos X 
+    call draw           ; Draw
+    pop 5               ; Pop all stuff
+
+    mov eax, 10         ; Frames (1s to load)
+    cmp sfr, eax        ; Comparing frames to 
+    jle Loader_Screen   ; If less than then run Loader_Screen
+    ; ret_le              ; Return if less equal
+
+    ; Taskbar
+    call Taskbar_View   
+
+    ; Mouse Cursor
+    call DrawMouseCursor
+
+    ; Getting all files from current path 
+
+    ; Call in time (to avoid Maximum call stack size exceeded)
+    push 500            ; 500 miliseconds (~2 fps)
+    call_it Loop        ; Calling
+ends

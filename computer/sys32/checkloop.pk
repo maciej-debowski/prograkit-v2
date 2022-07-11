@@ -1,0 +1,4 @@
+CheckLoop:
+    cmp isa, 1
+    jne Loop
+ends

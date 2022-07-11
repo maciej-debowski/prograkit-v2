@@ -17,7 +17,9 @@ UpdateCommandLine:
     ; Heap to stack
 
     ; Getting string from stack
+    dec sp                          ; Pointer--
     push sp                         ; Start of heap
+    inc sp                          ; Pointer++
     push bp                         ; Size of string
     htsrvs                          ; Heap to stack reversed
 

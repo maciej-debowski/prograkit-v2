@@ -1,0 +1,37 @@
+Taskbar_WriteDataTwo:
+    mov bl, ls                  ; Y
+    pop
+    mov cl, ls                  ; X
+    pop
+
+    mov ecx, ebx                ; 2nd digit
+    mov edx, ebx                ; 1st digit
+
+    ; Hour range (10, 20)
+    mov ah, ebx                 ; ah = hour
+    div ah, 10                  ; divide ah by 10 (int division)
+    mul ah, 10                  ; multiply by 10
+
+    ; 1st digit
+    mov edx, ebx                ; edx = hour
+    div edx, 10                 ; (int) edx / 10 
+    add edx, 48                 ; int to char
+
+    ; 2nd digit
+    subf ecx, ah                ; We have it! (int)
+    add ecx, 48                 ; int to char
+
+    push bl                     ; x
+    push cl                     ; y
+    push edx                    ; char (1st digit)
+    call Screen_Print_Char      ; print
+
+    add bl, 16                  ; x + 16
+
+    push bl                     ; x
+    push cl                     ; y
+    push ecx                    ; char (2nd digit)
+    call Screen_Print_Char      ; print
+
+    pop 6                       ; pop all
+ends

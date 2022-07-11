@@ -1,0 +1,25 @@
+Taskbar_WriteDataSingle:
+    mov bl, ls              ; X
+    pop
+    mov cl, ls              ; Y
+    pop
+
+    ; 0 pre 
+
+    push bl
+    push cl
+    push 48
+    call Screen_Print_Char
+
+    add bl, 16
+
+    ; digit
+
+    add ebx, 48             ; int to char
+    push bl                 ; x
+    push cl                 ; y 
+    push ebx                ; char
+    call Screen_Print_Char  ; print
+    
+    pop 6                   ; pop all
+ends

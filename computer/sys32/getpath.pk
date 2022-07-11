@@ -1,0 +1,6 @@
+GetPath:
+    mov eax, ptp            ; Pointer to path
+    push eax                ; Pointer
+    push ptl                ; Path Length
+    htsrvs                  ; Heap to stack reversed
+ends

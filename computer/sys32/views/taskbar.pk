@@ -1,0 +1,103 @@
+Taskbar_View:
+
+    ; =========================================== ;
+    ; Taskbar background                          ; 
+    ; =========================================== ;
+
+    push 0                          ; Test value to replace with screen height
+    call GetScreenHeight            ; Screen Height to last stack
+    mov ebx, ls                     ; Moving last stack to ebx
+    sub ebx, 100                    ; Substracting 100 from ebx
+    mov dl, ebx                     ; dl = ebx
+    pop                             ; Popping last stack
+
+    push 0x11F2020                  ; Color #1f2020
+    push 84                         ; Height
+    push 10000                      ; Width
+    push ebx                        ; Y
+    push 0                          ; X
+
+    call draw                       ; Drawing
+    pop 5
+
+    ; =========================================== ;
+    ; Start button + icon                         ; 
+    ; =========================================== ;
+
+    ; Frame
+
+    push 0x10099FF
+    push 60                         ; Height
+    push 60                         ; Width
+
+    add ebx, 12                     ; Adding 12 to ebx
+    push ebx                        ; Y
+    add ebx, 8                      ; Adding 8 to ebx
+
+    push 20                         ; X
+    call draw
+    pop 5
+
+    ; Icon
+
+    push 42                         ; X
+    add ebx, 22                     ; Adding +22 to ebx
+    sub ebx, 8                      ; - 8 from ebx
+    push ebx                        ; Y
+    add ebx, 8                      ; Adding 8 to ebx
+    push 102                        ; F letter
+
+    call Screen_Print_Char
+    pop 3
+    
+    ; =========================================== ;
+    ; Time                                        ; 
+    ; =========================================== ;
+
+    add dl, 34                      ; Offset to center y text in taskbar
+    
+    push 0                          ; Test value
+    call GetTimespan                ; Pushing timespan to test value
+    mov eax, ls                     ; Moving timespan to eax
+    pop                             ; Popping last stack
+
+    ; Hour
+    mov ebx, eax                    ; Moving timespan to ebx
+    div ebx, %HOUR%                 ; timespan / hour_in_ms (int no float)
+    mod ebx, 24                     ; hours_at_all % 24 = current hour
+    add ebx, %HOUR_OFFSET%          ; HOUR OFFSET
+    mov crh, ebx                    ; moving hour to current hour
+
+    push dl                         ; Taskbar Y
+    push 132                        ; X
+    cmp ebx, 9                      ; Cmp ebx, 9
+    jg Taskbar_WriteDataTwo         ; 2 digits
+    jle Taskbar_WriteDataSingle     ; 1 digit
+
+    ; Minute
+    mov ebx, eax                     ; Moving timespan to ebx         
+    div ebx, %MINUTE%                ; timespan / minute_in_ms (int no float)             
+    mod ebx, 60                      ; minutes_at_all % 60 = current minute     
+    mov crm, ebx                     ; moving minute to current minute       
+
+    push dl                          ; Taskbar Y       
+    push 180                         ; X           
+    cmp ebx, 9                       ; Cmp ebx, 9           
+    jg Taskbar_WriteDataTwo          ; 2 digits                       
+    jle Taskbar_WriteDataSingle      ; 1 digit                           
+
+    ; Second
+    mov ebx, eax                     ; Moving timespan to ebx                     
+    div ebx, %SECOND%                ; timespan / second_in_ms (int no float)         
+    mod ebx, 60                      ; seconds_at_all % 60 = current second  
+    mov crs, ebx                     ; moving second to current second           
+
+    push dl                          ; Taskbar Y   
+    push 228                         ; X       
+    cmp ebx, 9                       ; Cmp ebx, 9       
+    jg Taskbar_WriteDataTwo          ; 2 digits                   
+    jle Taskbar_WriteDataSingle      ; 1 digit    
+
+    sub dl, 40                       ; Substracting offset to center text in taskbar                   
+
+ends

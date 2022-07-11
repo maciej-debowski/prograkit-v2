@@ -1,0 +1,44 @@
+; Consts
+.data:FALSE=0,
+.data:TRUE=1,
+.data:SECOND=1000,
+.data:MINUTE=60000,
+.data:HOUR=3600000,
+.data:HOUR_OFFSET=2,
+.data:MAX_PATH=128,
+
+; System variables
+cr_reg isa          ; Is System Active
+cr_reg kpt          ; Key Press Timer
+cr_reg sfr          ; System frames
+
+cr_reg mox          ; Mouse X
+cr_reg moy          ; Mouse Y
+
+cr_reg crh          ; Current hour
+cr_reg crm          ; Current minute
+cr_reg crs          ; Current second
+cr_reg crd          ; Current day
+cr_reg crmt         ; Current month
+cr_reg cry          ; Current year
+
+cr_reg dix          ; Desktop Index X
+cr_reg diy          ; Desktop Index Y
+
+; Path
+cr_reg pts          ; Path separator eg. f:/hd/jd has 2 (/)
+cr_reg ptl          ; Path length
+cr_reg ptp          ; Pointer to path heap (max 128 letters = 1kb heap)
+ha %MAX_PATH%       ; Heap allocate path
+mov ptp, ls         ; Mov pointer from ha to ptp
+
+; Default path
+push word "f:/new_prograkit/computer/files"
+push ptp
+push $$
+
+mov ptl, ls
+call SetPath
+
+pop 2               ; Pop
+

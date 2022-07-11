@@ -1,0 +1,7 @@
+; Clearing stack to last zero
+
+ClearStacToZero:
+    pop
+    cmp ls, 0
+    jnz ClearStacToZero
+ends    

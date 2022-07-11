@@ -1,0 +1,9 @@
+DrawMouseCursor:
+    push 0x10077dd
+    push 16
+    push 16
+    push moy
+    push mox
+    call draw
+    pop 5
+ends

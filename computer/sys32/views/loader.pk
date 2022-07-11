@@ -1,0 +1,72 @@
+Loader_Screen:
+    mov ebp, 50 ; x 
+    mov edi, 25 ; y
+
+    ; Full word didnt work :( 
+
+    push word "F"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 51 
+
+    push word "l"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 52 
+
+    push word "o"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 53 
+
+    push word "o"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 54 
+
+    push word "r"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 55 
+
+    push word "s"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 57 
+
+    push word "L"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 58 
+
+    push word "o"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 59 
+
+    push word "a"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 60 
+
+    push word "d"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 61 
+
+    push word "i"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 62 
+
+    push word "n"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 63 
+
+    push word "g"
+    push $$
+    call ConsolePrintLine
+    mov ebp, 64 
+
+ends

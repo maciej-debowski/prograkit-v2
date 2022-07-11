@@ -6,16 +6,19 @@
 
 ; Constraints
 ; .data :[NAME_MAX_16_CHARS]=[VALUE_MAX_16_CHARS],
-.data:SHORT=65536,                                          
+.data:SHORT=65536,   ; 64 kb
+.data:HEAP_SIZE=33554432, ; 32 mb                                         
 
 ; Stack size
 .stack %SHORT%
 
 ; Maximal heap size
-.heap_max %SHORT%
+.heap_max %HEAP_SIZE%
+
+; Process Id
+.process_id 1
 
 ; Including
-
 include /../sys32/consoleprintline.pk
 include /../sys32/consoleclear.pk
 include /../sys32/clearconsoleline.pk
@@ -23,11 +26,29 @@ include /../sys32/consoleprintline_end.pk
 include /../sys32/updatecommandline.pk
 include /../sys32/nextline.pk
 include /../sys32/writetoconsole.pk
+include /../sys32/drawmousecursor.pk
+include /../sys32/checkloop.pk
+include /../sys32/loop.pk
+include /../sys32/clearstacktozero.pk
+include /../sys32/setpath.pk
+include /../sys32/getpath.pk
 
 ; Events
 include /events/onkeypress.pk
 include /events/onbackspace.pk
 include /events/onesc.pk
+include /events/onmousemove.pk
+
+; System vars
+include /vars/system.pk
+
+; Views
+include /../sys32/views/loader.pk
+include /../sys32/views/taskbar.pk
+
+; Views utils
+include /../sys32/views/utils/taskbar_writedatesingle.pk
+include /../sys32/views/utils/taskbar_writedatetwo.pk
 
 ; Command Line Heap
 ha 128                                                  ; Heap Alloc
@@ -37,7 +58,7 @@ ha 128                                                  ; Heap Alloc
 
 mov cx, ls                                              ; Pointer
 mov bp, 0                                               ; Sizeof String 
-mov sp, 0                                               ; Pointer Start (Start Pointer)
+mov sp, cx                                              ; Pointer Start (Start Pointer)
 mov di, 0                                               ; Backspaces (Delete Index)
 mov ebp, 1                                              ; Console Index X
 mov edi, 1                                              ; Console Index Y
@@ -48,4 +69,26 @@ push $$
 call ConsolePrintLine
 call NextLine
 
-; Command line
+; Press Any key to continue
+push word "Press any F to continue..."
+push $$
+call ConsolePrintLine
+call NextLine
+
+; Printing path
+call NextLine
+push word "Current path:"
+push $$
+call ConsolePrintLine
+call NextLine
+
+; Getting path
+call GetPath
+push eax                                                  ; Eax has length of path
+call ConsolePrintLine
+
+; ========================================= ;
+; FacioSoft floors v.2.0.0. END OF FILE.    ;
+; (c) FacioSoft 2022-2022.                  ;
+; Written in Prograkit assembly             ;
+; ========================================= ;

@@ -2,8 +2,9 @@
 ; Eax contains the key ascii code in binary
 
 OnKeyPress:
-    ; push 100
-    ; push 500
-    ; push eax
+    inc kpt
+    cmp eax, 102
+    je CheckLoop
+    
     call WriteToConsole
 ends
